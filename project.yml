@@ -1,0 +1,62 @@
+title: "CryptoNER"
+description: "A Named Entity Recognition model for cryptocurrencies. The model is trained
+on comments and posts collected from the r/CryptoCurrency subreddit. The data is annotated
+using Label Studio (https://labelstud.io/) and the output encoded as a .json file."
+
+vars:
+  config: "default"
+  labeled_data: "result"
+  test_size: 0.1
+  dev_size: 0.2
+
+directories: ["configs", "assets", "corpus", "training", "displacy"]
+
+workflows:
+  all:
+    - preprocess
+    - debug
+    - train
+    - evaluate
+
+commands:
+  - name: "preprocess"
+    help: "Unzip, convert and split Label Studio annotated data into train.spacy, test.spacy and dev.spacy"
+    script:
+      - "python scripts/preprocess.py assets/${vars.labeled_data}.zip corpus ${vars.test_size} ${vars.dev_size}"
+    deps:
+      - "assets/${vars.labeled_data}.zip"
+      - "scripts/preprocess.py"
+    outputs:
+      - "corpus/train.spacy"
+      - "corpus/test.spacy"
+      - "corpus/dev.spacy"
+
+  - name: "debug"
+    help: "Debug spaCy’s config file and binary training data (https://spacy.io/api/cli#debug)"
+    script:
+      - python -m spacy debug config configs/${vars.config}.cfg
+      - python -m spacy debug data configs/${vars.config}.cfg
+    deps:
+      - "corpus/train.spacy"
+      - "corpus/test.spacy"
+      - "corpus/dev.spacy"
+      - "configs/${vars.config}.cfg"
+
+  - name: "train"
+    help: "Train the model"
+    script:
+      - "python -m spacy train configs/${vars.config}.cfg -o training/"
+    deps:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+      - "configs/${vars.config}.cfg"
+    outputs:
+      - "training/model-best"
+
+  - name: "evaluate"
+    help: "Evaluate the best model on test.spacy and generate a displacy visualization"
+    script:
+      - "python -m spacy evaluate training/model-best corpus/test.spacy -dp displacy/"
+    deps:
+      - "corpus/test.spacy"
+      - "training/model-best"
