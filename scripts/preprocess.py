@@ -37,7 +37,9 @@ def create_spacy_docs(completed_tasks: List[Dict]):
     of Spacy Doc objects.
 
     Args:
-        completed_tasks:...
+        completed_tasks: A list of completed Label Studio's tasks. Each
+        task is encoded as a dictionary and represents an annotated Reddit
+        post or comment.
 
     Returns:
         A list of Spacy Doc objects.
@@ -95,7 +97,7 @@ def train_test_dev_split(docs: List[Doc], tot_ents: int, out_dir: Path,
     Args:
         docs: a list of Spacy Doc objects encoding Reddit comments and posts.
         tot_ents: total number of entities in docs.
-        out_dir: path to output directory for the three .spacy files.
+        out_dir: path to output directory storing the three .spacy files.
         test_size: a float representing the amount of data for the test set.
         dev_size: a float representing the amount of data for the dev set.
 
