@@ -37,7 +37,7 @@ def create_spacy_docs(completed_tasks: List[Dict]):
     of Spacy Doc objects.
 
     Args:
-        completed_tasks: A list of completed Label Studio's tasks. Each
+        completed_tasks: a list of completed Label Studio's tasks. Each
         task is encoded as a dictionary and represents an annotated Reddit
         post or comment.
 
