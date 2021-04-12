@@ -1,13 +1,14 @@
 title: "CryptoNER"
 description: "A Named Entity Recognition model for cryptocurrencies. The model is trained
 on comments and posts collected from the r/CryptoCurrency subreddit. The data is annotated
-using Label Studio (https://labelstud.io/) and the output encoded as a .json file."
+using Label Studio (https://labelstud.io/) and the output encoded as a .json file which is
+then further processed to obtain Spacy's binary training data."
 
 vars:
   config: "default"
   labeled_data: "result"
   test_size: 0.1
-  dev_size: 0.2
+  dev_size: 0.1
 
 directories: ["configs", "assets", "corpus", "training", "displacy"]
 
@@ -19,7 +20,7 @@ workflows:
     - evaluate
 
 commands:
-  - name: "preprocess"
+  - name: preprocess
     help: "Unzip, convert and split Label Studio annotated data into train.spacy, test.spacy and dev.spacy"
     script:
       - "python scripts/preprocess.py assets/${vars.labeled_data}.zip corpus ${vars.test_size} ${vars.dev_size}"
@@ -31,7 +32,7 @@ commands:
       - "corpus/test.spacy"
       - "corpus/dev.spacy"
 
-  - name: "debug"
+  - name: debug
     help: "Debug spaCy’s config file and binary training data (https://spacy.io/api/cli#debug)"
     script:
       - python -m spacy debug config configs/${vars.config}.cfg
@@ -42,7 +43,7 @@ commands:
       - "corpus/dev.spacy"
       - "configs/${vars.config}.cfg"
 
-  - name: "train"
+  - name: train
     help: "Train the model"
     script:
       - "python -m spacy train configs/${vars.config}.cfg -o training/"
@@ -53,10 +54,19 @@ commands:
     outputs:
       - "training/model-best"
 
-  - name: "evaluate"
+  - name: evaluate
     help: "Evaluate the best model on test.spacy and generate a displacy visualization"
     script:
       - "python -m spacy evaluate training/model-best corpus/test.spacy -dp displacy/"
     deps:
       - "corpus/test.spacy"
       - "training/model-best"
+
+  - name: clean
+    help: "Remove all files and folders created while running the previous commands"
+    script:
+      - "rm -rf displacy/"
+      - "rm -rf training/"
+      - "rm -rf corpus/"
+      - "rm -rf project.lock"
+
